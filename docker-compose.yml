@@ -12,6 +12,7 @@ services:
       - 8000:8000
     depends_on:
       - db
+      - elasticsearch
   db:
     image: postgres:13
     volumes:
@@ -36,6 +37,9 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    expose:
+      - 9200
+
 
 volumes:
   postgres_data:

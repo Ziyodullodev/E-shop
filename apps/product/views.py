@@ -5,9 +5,8 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from elasticsearch_dsl.query import MultiMatch
 from apps.product.document import ProductDocument
-
-# Create your views here.
 
 
 class CategoryListView(APIView):
@@ -38,12 +37,22 @@ class ProductListView(APIView):
 
     def get(self, request):
         filter_params = {}
-        elasticsearch = request.query_params.get("elasticsearch")
-        if elasticsearch:
-            search = request.query_params.get("search")
-            if search:
-                products = ProductDocument.search().query("match", title=search)
-                return Response(products.to_dict(), status=status.HTTP_200_OK)
+        elasticsearch_resp = request.query_params.get("elasticsearch")
+        if elasticsearch_resp:
+            search_query = MultiMatch(
+                query=elasticsearch_resp,
+                fields=["title", "description"],
+                fuzziness="AUTO",
+            )
+            products = ProductDocument.search().query(search_query).to_queryset()
+            if products:
+                serializer = ProductSerializer(products, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"message": "No product found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
         category_id = request.query_params.get("category_id")
         if category_id:
             filter_params["category_id"] = category_id

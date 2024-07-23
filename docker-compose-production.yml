@@ -14,6 +14,7 @@ services:
       - media_volume:/app/uploads
     depends_on:
       - db
+      - elasticsearch
 
   db:
     image: postgres:13
@@ -35,8 +36,22 @@ services:
       - media_volume:/app/uploads
     depends_on:
       - web
+    
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    expose:
+      - 9200
 
 volumes:
   postgres_data:
   static_volume:
   media_volume:
+  esdata01:
