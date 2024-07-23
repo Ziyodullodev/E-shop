@@ -36,8 +36,19 @@ class CategoryListView(APIView):
 class ProductListView(APIView):
 
     def get(self, request):
+        filter_params = {}
+        category_id = request.query_params.get("category_id")
+        if category_id:
+            filter_params["category_id"] = category_id
 
-        products = Product.objects.all()
+        search = request.query_params.get("search")
+        if search:
+            filter_params["title__icontains"] = search
+
+        if filter_params:
+            products = Product.objects.filter(**filter_params)
+        else:
+            products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -69,7 +80,7 @@ class ProductListView(APIView):
 
 
 class ProductDetailView(APIView):
-    
+
     def get(self, request, product_id):
         try:
             product = Product.objects.get(id=product_id)
@@ -90,13 +101,9 @@ class ProductDetailView(APIView):
             ):
                 raise ValueError("Invalid Authorization header format")
 
-            token = authorization_header.split(" ")[
-                1
-            ]
+            token = authorization_header.split(" ")[1]
             decoded_token = AccessToken(token)
-            user_id = decoded_token.payload[
-                "user_id"
-            ]
+            user_id = decoded_token.payload["user_id"]
             user = User.objects.get(id=user_id)
             if user.is_staff is False:
                 return Response(
@@ -127,6 +134,21 @@ class ProductDetailView(APIView):
     def delete(self, request, product_id):
 
         try:
+            authorization_header = request.headers.get("Authorization")
+            if authorization_header is None or not authorization_header.startswith(
+                "Bearer "
+            ):
+                raise ValueError("Invalid Authorization header format")
+
+            token = authorization_header.split(" ")[1]
+            decoded_token = AccessToken(token)
+            user_id = decoded_token.payload["user_id"]
+            user = User.objects.get(id=user_id)
+            if user.is_staff is False:
+                return Response(
+                    {"message": "You do not have permission to perform this action"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             product = Product.objects.get(id=product_id)
             product.delete()
             return Response(
@@ -136,5 +158,54 @@ class ProductDetailView(APIView):
         except Product.DoesNotExist:
             return Response(
                 {"message": "Product not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class CategoryDetailView(APIView):
+
+    def get(self, request, category_id):
+        try:
+            category = Category.objects.get(id=category_id)
+            serializer = CategorySerializer(category)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Category.DoesNotExist:
+            return Response(
+                {"message": "Category not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    def put(self, request, category_id):
+
+        try:
+            category = Category.objects.get(id=category_id)
+            data = request.data
+            serializer = CategorySerializer(category, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {"message": "Category successfully updated"},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Category.DoesNotExist:
+            return Response(
+                {"message": "Category not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    def delete(self, request, category_id):
+
+        try:
+            category = Category.objects.get(id=category_id)
+            category.delete()
+            return Response(
+                {"message": "Category successfully deleted"},
+                status=status.HTTP_200_OK,
+            )
+        except Category.DoesNotExist:
+            return Response(
+                {"message": "Category not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
