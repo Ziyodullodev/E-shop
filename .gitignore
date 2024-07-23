@@ -22,6 +22,8 @@ var/
 wheels/
 share/python-wheels/
 *.egg-info/
+category/*
+product/*
 .installed.cfg
 *.egg
 MANIFEST

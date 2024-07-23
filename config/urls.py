@@ -29,6 +29,7 @@ urlpatterns = [
 
     # API's wirte here
     path('api/v1/auth/', include('apps.account.urls')),
+    path('api/v1/product/', include('apps.product.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
