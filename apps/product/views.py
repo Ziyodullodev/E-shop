@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from apps.product.document import ProductDocument
 
 # Create your views here.
 
@@ -37,6 +38,12 @@ class ProductListView(APIView):
 
     def get(self, request):
         filter_params = {}
+        elasticsearch = request.query_params.get("elasticsearch")
+        if elasticsearch:
+            search = request.query_params.get("search")
+            if search:
+                products = ProductDocument.search().query("match", title=search)
+                return Response(products.to_dict(), status=status.HTTP_200_OK)
         category_id = request.query_params.get("category_id")
         if category_id:
             filter_params["category_id"] = category_id

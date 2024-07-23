@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "django_filters",
     "whitenoise.runserver_nostatic",
     "drf_yasg",
+    "django_elasticsearch_dsl",
 ]
 
 INSTALLED_APPS += [
@@ -152,4 +153,11 @@ SIMPLE_JWT = {
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
+}
+
+
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'http://elasticsearch:9200'
+    }
 }
