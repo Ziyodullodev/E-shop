@@ -8,8 +8,6 @@ from apps.account.serializers import UserSerializer
 
 
 class UserView(APIView):
-    authentication_classes = (TokenAuthentication,)
-
     def get(self, request):
         try:
             authorization_header = request.headers.get("Authorization")
@@ -18,13 +16,9 @@ class UserView(APIView):
             ):
                 raise ValueError("Invalid Authorization header format")
 
-            token = authorization_header.split(" ")[
-                1
-            ]
+            token = authorization_header.split(" ")[1]
             decoded_token = AccessToken(token)
-            user_id = decoded_token.payload[
-                "user_id"
-            ]
+            user_id = decoded_token.payload["user_id"]
             user = User.objects.get(id=user_id)
             serializer = UserSerializer(user)
 
@@ -41,13 +35,9 @@ class UserView(APIView):
             ):
                 raise ValueError("Invalid Authorization header format")
 
-            token = authorization_header.split(" ")[
-                1
-            ]
+            token = authorization_header.split(" ")[1]
             decoded_token = AccessToken(token)
-            user_id = decoded_token.payload[
-                "user_id"
-            ]
+            user_id = decoded_token.payload["user_id"]
             user = User.objects.get(id=user_id)
             data = request.data
             serializer = UserSerializer(user, data=data, partial=True)
