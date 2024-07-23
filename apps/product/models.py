@@ -8,7 +8,7 @@ from apps.account.models import User
 class Category(models.Model):
     title = models.CharField(_("Title"), max_length=255)
     description = models.TextField(_("Description"))
-    image = models.ImageField(upload_to="category/", null=True, blank=True)
+    image = models.ImageField(upload_to="uploads/categories/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -25,7 +25,7 @@ class Product(models.Model):
     description = models.TextField(_("Description"))
     price = models.DecimalField(_("Price"), max_digits=10, decimal_places=2, default=0.00)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="product/", null=True, blank=True)
+    image = models.ImageField(upload_to="uploads/products/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
