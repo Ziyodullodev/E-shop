@@ -13,17 +13,17 @@ ALLOWED_HOSTS = ["*"]
 
 
 DB_NAME = get_secret("DB_NAME")
-DB_USER_NM = get_secret("DB_USER_NM")
-DB_USER_PW = get_secret("DB_USER_PW")
-DB_IP = get_secret("DB_IP")
+DB_USERNAME = get_secret("DB_USERNAME")
+DB_PASSWORD = get_secret("DB_PASSWORD")
+DB_HOSTNAME = get_secret("DB_HOSTNAME")
 DB_PORT = get_secret("DB_PORT")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": DB_NAME,
-        "USER": DB_USER_NM,
-        "PASSWORD": DB_USER_PW,
-        "HOST": DB_IP,
+        "USER": DB_USERNAME,
+        "PASSWORD": DB_PASSWORD,
+        "HOST": DB_HOSTNAME,
         "PORT": DB_PORT,
     }
 }
