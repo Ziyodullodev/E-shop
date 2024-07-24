@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from elasticsearch_dsl.query import MultiMatch
 from apps.product.document import ProductDocument
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListCreateAPIView
 
 
 class MainPagination(PageNumberPagination):
@@ -17,7 +17,7 @@ class MainPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class CategoryListView(ListAPIView):
+class CategoryListView(ListCreateAPIView):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -45,9 +45,11 @@ class ProductListView(APIView):
             )
             if products:
                 serializer = ProductSerializer(products, many=True)
-                return self.get_paginated_response(
+                paginator = MainPagination()
+                result_page = paginator.paginate_queryset(products, request)
+                return paginator.get_paginated_response(
                     serializer.data
-                )  # Return paginated response
+                )
             else:
                 return Response(
                     {"message": "No product found"},
@@ -67,14 +69,13 @@ class ProductListView(APIView):
         else:
             products = Product.objects.all().order_by("-created_at")
 
-        # Paginate the queryset
         paginator = MainPagination()
         result_page = paginator.paginate_queryset(products, request)
 
         serializer = ProductSerializer(result_page, many=True)
         return paginator.get_paginated_response(
             serializer.data
-        )  # Return paginated response
+        )
 
     def post(self, request):
         try:

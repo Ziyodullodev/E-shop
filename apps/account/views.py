@@ -5,6 +5,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from apps.account.models import User
 from apps.account.serializers import UserSerializer
+from rest_framework.permissions import AllowAny
 
 
 class UserView(APIView):
@@ -60,6 +61,8 @@ class UserView(APIView):
 
 
 class RegisterView(APIView):
+    permission_classes = (AllowAny,)
+
     def post(self, request):
         data = request.data
         serializer = UserSerializer(data=data)
