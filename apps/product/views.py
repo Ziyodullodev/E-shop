@@ -7,33 +7,26 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from elasticsearch_dsl.query import MultiMatch
 from apps.product.document import ProductDocument
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.generics import ListAPIView
 
 
-class CategoryListView(APIView):
+class MainPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
 
-    def get(self, request):
 
-        categories = Category.objects.all()
-        serializer = CategorySerializer(categories, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class CategoryListView(ListAPIView):
 
-    def post(self, request):
-        try:
-            data = request.data
-            serializer = CategorySerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    {"message": "Category successfully created"},
-                    status=status.HTTP_201_CREATED,
-                )
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    pagination_class = MainPagination
 
 
 class ProductListView(APIView):
+
+    pagination_class = MainPagination
 
     def get(self, request):
         filter_params = {}
@@ -44,15 +37,23 @@ class ProductListView(APIView):
                 fields=["title", "description"],
                 fuzziness="AUTO",
             )
-            products = ProductDocument.search().query(search_query).to_queryset()
+            products = (
+                ProductDocument.search()
+                .query(search_query)
+                .to_queryset()
+                .order_by("-created_at")
+            )
             if products:
                 serializer = ProductSerializer(products, many=True)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                return self.get_paginated_response(
+                    serializer.data
+                )  # Return paginated response
             else:
                 return Response(
                     {"message": "No product found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
+
         category_id = request.query_params.get("category_id")
         if category_id:
             filter_params["category_id"] = category_id
@@ -62,11 +63,18 @@ class ProductListView(APIView):
             filter_params["title__icontains"] = search
 
         if filter_params:
-            products = Product.objects.filter(**filter_params)
+            products = Product.objects.filter(**filter_params).order_by("-created_at")
         else:
-            products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            products = Product.objects.all().order_by("-created_at")
+
+        # Paginate the queryset
+        paginator = MainPagination()
+        result_page = paginator.paginate_queryset(products, request)
+
+        serializer = ProductSerializer(result_page, many=True)
+        return paginator.get_paginated_response(
+            serializer.data
+        )  # Return paginated response
 
     def post(self, request):
         try:
